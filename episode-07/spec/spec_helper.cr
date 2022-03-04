@@ -40,15 +40,3 @@ module Spec::Expectations
     SolutionExpectation.new solution.transform_values(&.to_s)
   end
 end
-
-# private def expect_solution(asts, solution)
-#   solver = Z3::Solver.new
-#   asts.each do |ast|
-#     solver.assert(ast)
-#   end
-#   solver.satisfiable?.should eq(true)
-#   model = solver.model
-#   solution.each do |var, expectation|
-#     model[var].should eq(expectation)
-#   end
-# end

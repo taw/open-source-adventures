@@ -99,11 +99,10 @@ module Z3
     end
 
     def model_eval(model, ast, complete)
-      result_ptr = Pointer(LibZ3::Ast).malloc
-      result = LibZ3.model_eval(Context, model, ast, complete, result_ptr)
+      result = LibZ3.model_eval(Context, model, ast, complete, out result_ast)
       raise "Cannot evaluate" unless result == true
       # Full conversion is complicated, this is a good start
-      s = ast_to_string result_ptr[0]
+      s = ast_to_string result_ast
       if s =~ /\A\(- (\d+)\)\z/
         s = "-#{$1}"
       end
