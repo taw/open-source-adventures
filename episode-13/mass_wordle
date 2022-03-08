@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+def report(guess, word)
+  5.times.map{|i|
+    if guess[i] == word[i]
+      "🟩"
+    elsif word.include?(guess[i])
+      "🟨"
+    else
+      "🟥"
+    end
+  }.join
+end
+
+guess = ARGV[0]
+
+STDIN.each_line do |line|
+  line.chomp!
+  puts "#{report(guess, line)}"
+end
