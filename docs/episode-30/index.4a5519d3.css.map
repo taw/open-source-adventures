@@ -1,0 +1,1 @@
+{"mappings":"AAAA","sources":["src/app.css"],"sourcesContent":["body {\n  margin: 0;\n  min-height: 100vh;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  align-items: center;\n}\n"],"names":[],"version":3,"file":"index.4a5519d3.css.map","sourceRoot":"/__parcel_source_root/"}
