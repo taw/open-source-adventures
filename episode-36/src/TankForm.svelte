@@ -16,7 +16,7 @@ $: total = Math.round(active + storage * storageGood / 100.0)
 
 <form>
   <Slider label="Adjustment for losses data" min={-30} max={50} bind:value={adjustmentLoss} format={(v) => d3.format("+d")(v) + "%"} />
-  <Slider label="Predicted future war intensity" min={-50} max={200} bind:value={futureIntensity} format={(v) => `${v}%`} />
+  <Slider label="Predicted future war intensity" min={50} max={200} bind:value={futureIntensity} format={(v) => `${v}%`} />
   <Slider label="Russian tanks at start of war" min={2500} max={3500} bind:value={active} format={(v) => v} />
   <Slider label="Russian tanks in storage" min={8000} max={12000} bind:value={storage} format={(v) => v} />
   <Slider label="Usable tanks in storage" min={0} max={100} bind:value={storageGood} format={(v) => `${v}%`} />
