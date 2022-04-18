@@ -13,7 +13,7 @@ $: total = active
 
 <form>
   <Slider label="Adjustment for losses data" min={-30} max={50} bind:value={adjustmentLoss} format={(v) => d3.format("+d")(v) + "%"} />
-  <Slider label="Predicted future war intensity" min={-50} max={200} bind:value={futureIntensity} format={(v) => `${v}%`} />
+  <Slider label="Predicted future war intensity" min={10} max={200} bind:value={futureIntensity} format={(v) => `${v}%`} />
   <Slider label="Russian armored vehicles at start of war" min={5000} max={7000} bind:value={active} format={(v) => v} />
   <div>
     <span>Total usable armored vehicles</span>
