@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require "pathname"
+
+class UpdateCSV
+  def initialize(archive_path)
+    @archive_path = Pathname(archive_path)
+  end
+
+  def updated_equipment
+    @updated_equipment ||= (@archive_path + "russia_losses_equipment.csv").read
+  end
+
+  def updated_personnel
+    @updated_personnel ||= (@archive_path + "russia_losses_personnel.csv").read
+  end
+
+  def csv_files
+    @csv_files ||= `git ls`.lines.map(&:chomp).grep(/\.csv\z/)
+  end
+
+  def call
+    csv_files.each do |path|
+      case path
+      when /russia_losses_equipment/
+        Pathname(path).write(updated_equipment)
+      when /russia_losses_personnel/
+        Pathname(path).write(updated_personnel)
+      else
+        puts "Unknown CSV file: #{path}"
+      end
+    end
+  end
+end
+
+unless ARGV[0]
+  STDERR.puts "Usage: #{$0} path_to_updated_archive"
+  exit 1
+end
+
+UpdateCSV.new(ARGV[0]).call
