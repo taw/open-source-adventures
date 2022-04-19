@@ -6,8 +6,8 @@ import { activeTanks, storageTanks, storageGood, totalTanks } from "./stores"
 
 <form>
   <CommonSliders />
-  <Slider label="Russian tanks at start of the war" min={2500} max={3500} bind:value={$activeTanks} format={(v) => v} />
-  <Slider label="Russian tanks in storage" min={8000} max={12000} bind:value={$storageTanks} format={(v) => v} />
+  <Slider label="Russian tanks at start of the war" min={1500} max={4000} bind:value={$activeTanks} format={(v) => v} />
+  <Slider label="Russian tanks in storage" min={5000} max={12000} bind:value={$storageTanks} format={(v) => v} />
   <Slider label="Usable tanks in storage" min={0} max={100} bind:value={$storageGood} format={(v) => `${v}%`} />
   <div>
     <span>Total usable tanks</span>
