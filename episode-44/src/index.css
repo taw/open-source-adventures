@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+svg {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  background-color: #aaa;
+}
+.eye1 {
+  fill: white;
+  stroke: black;
+  stroke-width: 3px;
+}
+.eye2 {
+  stroke: black;
+  stroke-width: 1px;
+}
+.eye3 {
+  fill: black;
+}
