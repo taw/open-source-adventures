@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+
+require "json"
+require "memoist"
+require "pathname"
+require "pry"
+
+class Weapon
+  extend Memoist
+  attr_reader :data
+
+  def initialize(path)
+    @data = JSON.parse(path.read)
+  end
+
+  memoize def name
+    bonuses = [bonus_a, bonus_b].compact
+    if bonuses.empty?
+      base_name
+    else
+      "#{base_name} (#{bonuses.join(", ")})"
+    end
+  end
+
+  memoize def base_name
+    [
+      data["Description"]["Name"],
+      data["Description"]["UIName"],
+    ].compact.last.gsub(" +", "+")
+  end
+
+  memoize def bonus_a
+    data["BonusValueA"] == "" ? nil : data["BonusValueA"].gsub(/[a-z]\K\./, "")
+  end
+
+  memoize def bonus_b
+    data["BonusValueB"] == "" ? nil : data["BonusValueB"].gsub(/[a-z]\K\./, "")
+  end
+
+  def category
+    @data["Category"]
+  end
+
+  def tonnage
+    @data["Tonnage"]
+  end
+
+  def damage
+    shots * base_damage
+  end
+
+  def base_damage
+    @data["Damage"]
+  end
+
+  def shots
+    @data["ShotsWhenFired"]
+  end
+
+  def heat
+    @data["HeatGenerated"]
+  end
+
+  def heat_tonnage
+    heat / 3.0
+  end
+
+  def ammo_tonnage
+    # TODO
+    0
+  end
+
+  def total_tonnage
+    tonnage + heat_tonnage + ammo_tonnage
+  end
+
+  def ammo_category
+    @data["ammoCategoryID"]
+  end
+
+  def purchasable?
+    @data["Description"]["Purchasable"]
+  end
+end
+
+class BattleTechGame
+  extend Memoist
+
+  def initialize(game_root, *dlc_roots)
+    @game_root = Pathname(game_root)
+    @dlc_roots = dlc_roots.map{|path| Pathname(path)}
+  end
+
+  memoize def data_root
+    @game_root + "BattleTech_Data/StreamingAssets/data"
+  end
+
+  memoize def weapon_files
+    [data_root, *@dlc_roots]
+      .flat_map{|root| root.glob("weapon/*.json")}
+      .select{|n| n.basename.to_s != "WeaponTemplate.json"}
+  end
+
+  memoize def weapons
+    weapon_files.map{|path| Weapon.new(path)}
+  end
+
+  def print_weapons_report
+    weapons
+      .select{|w| w.category != "Melee" and w.name != "AI Laser"}
+      .sort_by{|w|
+        [w.damage.to_f / w.total_tonnage, w.damage, w.name]
+      }
+      .reverse
+      .each{|w|
+        puts "* #{w.name}: #{w.damage} / #{w.total_tonnage.round(2)}"
+      }
+  end
+end
+
+game = BattleTechGame.new(*ARGV)
+game.print_weapons_report
