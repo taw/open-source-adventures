@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 120%;
+}
+.supergrid {
+  display: grid;
+  grid-template-columns: 100px 1fr 100px;
+  grid-template-rows: 100px 1fr 100px;
+}
+.left, .right, .top, .bottom {
+  font-size: 200%;
+  font-family: sans-serif;
+  text-align: center;
+}
+.left {
+  grid-column: 1;
+  grid-row: 2;
+  writing-mode: vertical-lr;
+}
+.right {
+  grid-column: 3;
+  grid-row: 2;
+  writing-mode: vertical-lr;
+}
+.top {
+  grid-column: 2;
+  grid-row: 1;
+}
+.bottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+.grid {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  background: #ccc;
+}
+.scenario {
+  width: 500px;
+  height: 300px;
+  display: flex;
+  gap: 10px;
+}
+.image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+img {
+  max-width: 150px;
+  display: inline-block;
+}
+h1 {
+  margin: 0;
+}
+h2 {
+  margin: 0;
+}
+p {
+  margin: 0;
+  margin-bottom: 0.5em;
+}
+</style>
+</head>
+<body>
+
+<div class="supergrid">
+  <h3 class="top">Retarded</h3>
+  <h3 class="bottom">Enlightened</h3>
+  <h3 class="right">Negative Credibility</h3>
+  <h3 class="left">Imaginary Credibility</h3>
+
+  <div class="grid">
+
+    <div class="scenario">
+      <div class="image">
+        <img src="schroeder.png">
+      </div>
+      <div>
+        <h1>Führer Gerhard Schröder</h2>
+        <h2>Fourth Reich</h2>
+        <p>Germans were playing the long game.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="lukashenko.jpeg">
+      </div>
+      <div>
+        <h1>Colonel Lukashenko</h2>
+        <h2>Reverse Union State</h2>
+        <p>All generals got switchbladed, leaving Colonel Lukashenko as the highest ranked officer of the Russian Forces.</p>
+        <p>Surprisingly little changes for Russia.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="pooh.png">
+      </div>
+      <div>
+        <h1>Xi Jinping</h2>
+        <h2>Chinese Vassal State</h2>
+        <p>Everything in Russia got sold to China to fund the war. War still lost.</p>
+        <p>Uralvagonzavod now assembles Huawei phones.</p>
+        <p>Most Russians better off this way.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="assad.jpeg">
+      </div>
+      <div>
+        <h1>Caliph Bashar al-Assad</h2>
+        <h2>al-Khilafat al-Ruwsia</h2>
+        <p>Recruitment of Syrians goes better than expected.</p>
+        <p>Syrians have a different idea once they get to Russia.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="kirill.jpeg">
+      </div>
+      <div>
+        <h1>Patriarch Kirill</h2>
+        <h2>Holy Russian Empire</h2>
+        <p>Because only God can save Russia from this mess.</p>
+        <p>Spoiler alert: Turns out God did not save Russia from this mess.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="zelensky.jpeg">
+      </div>
+      <div>
+        <h1>President Zelensky</h2>
+        <h2>Greater Ukraine</h2>
+        <p>The way things are going, would it really be that surprising?</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="e2.jpeg">
+      </div>
+      <div>
+        <h1>Queen Elizabeth II</h2>
+        <h2>Crimean War 2: Electric Boogaloo</h2>
+        <p>Charge of the Light Brigade takes Kremlin.</p>
+        <p>Sun never sets on the British Empire.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="kadyrov.jpeg">
+      </div>
+      <div>
+        <h1>Supreme Influencer Kadyrov</h2>
+        <h2>Greater Chechnya</h2>
+        <p>While Russian soldiers were dying, Tik Tok Army was looting.</p>
+        <p>The only armed force left standing, with all the best stolen weapons.</p>
+      </div>
+    </div>
+
+    <div class="scenario">
+      <div class="image">
+        <img src="shoigu.jpeg">
+      </div>
+      <div>
+        <h1>Khan Sergei Shoigu</h2>
+        <h2>Khanate of Tuva</h2>
+        <p>3000 black horses of Shoigu won the war.</p>
+        <p>Horses can run through mud, Javelin can't lock onto horses, Kyiv taken in 48h.</p>
+        <p>Nomad hordes roam free on the steppes once more.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
