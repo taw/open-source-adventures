@@ -1,0 +1,235 @@
+#!/usr/bin/env ruby
+
+require "json"
+require "memoist"
+require "pathname"
+require "pry"
+
+class String
+  def camelize
+    gsub(/_([a-z])/) { $1.upcase }
+  end
+end
+
+class AmmoBox
+  extend Memoist
+  attr_reader :data, :path
+
+  def initialize(path)
+    @path = path
+    @data = JSON.parse(path.read)
+  end
+
+  memoize def id
+    @data["AmmoID"].sub(/\AAmmunition_/, "")
+  end
+
+  def tonnage
+    @data["Tonnage"]
+  end
+
+  def capacity
+    @data["Capacity"]
+  end
+end
+
+class Weapon
+  extend Memoist
+  attr_reader :game, :data, :path
+
+  def initialize(game, path)
+    @game = game
+    @path = path
+    @data = JSON.parse(path.read)
+  end
+
+  memoize def name
+    if has_bonus?
+      "#{base_name} (#{bonus})"
+    else
+      base_name
+    end
+  end
+
+  memoize def has_bonus?
+    [bonus_a, bonus_b].any?
+  end
+
+  memoize def bonus
+    [bonus_a, bonus_b].compact.join(", ")
+  end
+
+  memoize def base_name
+    [
+      data["Description"]["Name"],
+      data["Description"]["UIName"],
+    ].compact.last.gsub(" +", "+")
+  end
+
+  memoize def bonus_a
+    data["BonusValueA"] == "" ? nil : data["BonusValueA"].gsub(/[a-z]\K\./, "").gsub(/[\+\-]\K /, "")
+  end
+
+  memoize def bonus_b
+    data["BonusValueB"] == "" ? nil : data["BonusValueB"].gsub(/[a-z]\K\./, "").gsub(/[\+\-]\K /, "")
+  end
+
+  def category
+    @data["Category"]
+  end
+
+  def subtype
+    @data["WeaponSubType"]
+  end
+
+  def tonnage
+    @data["Tonnage"]
+  end
+
+  def damage
+    shots * base_damage
+  end
+
+  def base_damage
+    @data["Damage"]
+  end
+
+  def shots
+    @data["ShotsWhenFired"]
+  end
+
+  def heat
+    @data["HeatGenerated"]
+  end
+
+  def ammo_per_shot
+    @data["ShotsWhenFired"] * data["ProjectilesPerShot"]
+  end
+
+  def heat_tonnage
+    heat / 3.0
+  end
+
+  # 10 rounds of shootnig at target
+  def ammo_tonnage_per_shot
+    @game.ammo_weights.fetch(ammo_category) * ammo_per_shot
+  end
+
+  def total_tonnage
+    tonnage + heat_tonnage + ammo_tonnage
+  end
+
+  def ammo_category
+    @data["ammoCategoryID"] || @data["AmmoCategory"]
+  end
+
+  def purchasable?
+    @data["Description"]["Purchasable"]
+  end
+
+  def weapon_effect
+    @data["WeaponEffectID"]
+  end
+
+  def ignore?
+    [
+      category == "Melee",
+      name == "AI Laser",
+      base_name =~ /Flamer/,
+      base_name =~ /Infernos/,
+      subtype == "TAG",
+      subtype == "Narc",
+      subtype =~ /\ACOIL/,
+      weapon_effect == "WeaponEffect-Artillery_MechMortar",
+      weapon_effect == "WeaponEffect-Artillery_Thumper",
+    ].any?
+  end
+
+  def min_range
+    @data["MinRange"]
+  end
+
+  def max_range
+    @data["MaxRange"]
+  end
+
+  def indirect_fire
+    @data["IndirectFireCapable"]
+  end
+
+  def base_stab_damage
+    @data["Instability"]
+  end
+
+  def as_json
+    {
+      base_name:,
+      bonus:,
+      tonnage:,
+      heat:,
+      shots:,
+      base_damage:,
+      ammo_tonnage_per_shot:,
+      min_range:,
+      max_range:,
+      indirect_fire:,
+      base_stab_damage:,
+      category:,
+    }.transform_keys(&:to_s).transform_keys(&:camelize)
+  end
+end
+
+class BattleTechGame
+  extend Memoist
+
+  def initialize(game_root, *dlc_roots)
+    @game_root = Pathname(game_root)
+    @dlc_roots = dlc_roots.map{|path| Pathname(path)}
+  end
+
+  memoize def data_root
+    @game_root + "BattleTech_Data/StreamingAssets/data"
+  end
+
+  def roots
+    [data_root, *@dlc_roots]
+  end
+
+  memoize def weapon_files
+    roots
+      .flat_map{|root| root.glob("weapon/*.json")}
+      .select{|n| n.basename.to_s != "WeaponTemplate.json"}
+  end
+
+  memoize def weapons
+    weapon_files.map{|path| Weapon.new(self, path)}
+  end
+
+  memoize def ammobox_files
+    roots
+      .flat_map{|root| root.glob("ammunitionBox/*.json")}
+      .select{|n| n.basename.to_s != "AmmoBoxTemplate.json"}
+  end
+
+  memoize def ammoboxes
+    ammobox_files.map{|path| AmmoBox.new(path)}
+  end
+
+  memoize def ammo_weights
+    # MG box occurs twice, but with same ratio
+    ammoboxes.to_h{|a| [a.id, a.tonnage.to_f/a.capacity]}.merge("NotSet" => 0.0)
+  end
+
+  def inspect
+    "BattechGame"
+  end
+
+  def as_json
+    weapons
+      .reject(&:ignore?)
+      .map(&:as_json)
+  end
+end
+
+game = BattleTechGame.new(*ARGV)
+puts JSON.pretty_generate(game.as_json)
