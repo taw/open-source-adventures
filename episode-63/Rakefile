@@ -1,0 +1,5 @@
+task default: "app.js"
+
+file "app.js" => "app.rb" do
+  sh "opal -c app.rb >app.js"
+end
