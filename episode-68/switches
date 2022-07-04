@@ -1,0 +1,57 @@
+#!/usr/bin/env crystal
+
+require "z3"
+require "set"
+
+class SwitchesSolver
+  @nodes : Array(String)
+  @flipme : Set(String)
+
+  def initialize(path)
+    lines = File.read_lines(path).map(&.split)
+    @nodes = lines.shift
+    @flipme = lines.shift.to_set
+    @connections = {} of String => Set(String)
+    @nodes.each do |n|
+      @connections[n] = Set{n}
+    end
+    lines.each do |(a, b)|
+      @connections[a] << b
+      @connections[b] << a
+    end
+    @solver = Z3::Solver.new
+    @switches = {} of String => Z3::BoolExpr
+    @lights = {} of String => Z3::BoolExpr
+  end
+
+  def call
+    # Initialize variables
+    @nodes.each do |n|
+      @lights[n] = Z3.bool("light #{n}")
+      @switches[n] = Z3.bool("switch #{n}")
+    end
+
+    # Set which lights should or should not be flipped
+    @nodes.each do |n|
+      if @flipme.includes?(n)
+        @solver.assert @lights[n]
+      else
+        @solver.assert ~@lights[n]
+      end
+    end
+
+    # Which switches affect which light
+    @nodes.each do |n|
+      @solver.assert @lights[n] == @connections[n].map{|nn| @switches[nn]}.reduce{|a,b| a^b}
+    end
+
+    if @solver.check
+      model = @solver.model
+      puts @nodes.select{|n| model[@switches[n]].to_s == "true" }.sort.join(" ")
+    else
+      puts "No solution"
+    end
+  end
+end
+
+SwitchesSolver.new(ARGV[0]).call
