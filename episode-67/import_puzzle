@@ -1,0 +1,9 @@
+#!/usr/bin/env crystal
+
+puzzle = ARGV[0].split(",")
+size = (puzzle.size - 1) // 2
+top = puzzle[1, size]
+left = puzzle[-size..-1]
+trees = puzzle[0]
+map = trees.chars.map{|c| "." * ['_', *'a'..'z'].index(c).not_nil! }.join("T").scan(/.{#{top.size}}/).map(&.[0])
+puts [" #{top.join}\n", left.zip(map).map{|a,b| "#{a}#{b}\n"}.join].join

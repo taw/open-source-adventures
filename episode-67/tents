@@ -1,0 +1,118 @@
+#!/usr/bin/env crystal
+
+require "z3"
+
+class TentsSolver
+  @ysize : Int32
+  @xsize : Int32
+  @row_hints : Array(Int32)
+  @col_hints : Array(Int32)
+  @trees : Array(Array(Bool))
+
+  def initialize(path)
+    lines = File.read_lines(path)
+    @col_hints = lines.shift[1..-1].chars.map(&.to_i)
+    @xsize = @col_hints.size
+    @row_hints = lines.map(&.[0].to_i)
+    @ysize = @row_hints.size
+    @trees = lines.map{|l| l[1..-1].chars.map{|c| c == 'T'}}
+    @solver = Z3::Solver.new
+    @tent_vars = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @tree_vars = {} of Tuple(Int32, Int32) => Z3::IntExpr
+  end
+
+  def each_coord
+    @xsize.times do |x|
+      @ysize.times do |y|
+        yield(x, y)
+      end
+    end
+  end
+
+  def row_tent_count(y)
+    (0...@xsize).map{|x| @tent_vars[{x,y}].ite(1, 0)}.reduce{|a,b| a+b}
+  end
+
+  def col_tent_count(x)
+    (0...@ysize).map{|y| @tent_vars[{x,y}].ite(1, 0)}.reduce{|a,b| a+b}
+  end
+
+  def neighbourhood(x,y)
+    [
+      @tent_vars[{x, y+1}]?,
+      @tent_vars[{x, y-1}]?,
+      @tent_vars[{x+1, y+1}]?,
+      @tent_vars[{x+1, y}]?,
+      @tent_vars[{x+1, y-1}]?,
+      @tent_vars[{x-1, y+1}]?,
+      @tent_vars[{x-1, y}]?,
+      @tent_vars[{x-1, y-1}]?,
+    ].compact
+  end
+
+  def call
+    # Initialize tent variables
+    each_coord do |x, y|
+      @tent_vars[{x,y}] = Z3.bool("tent #{x},#{y}")
+    end
+
+    # Initialize tree variables
+    each_coord do |x, y|
+      @tree_vars[{x,y}] = v = Z3.int("tree #{x},#{y}")
+      if @trees[y][x]
+        @solver.assert v >= 1
+        @solver.assert v <= 4
+      else
+        @solver.assert v == 0
+      end
+    end
+
+    # Row hints are correct
+    @ysize.times do |y|
+      @solver.assert row_tent_count(y) == @row_hints[y]
+    end
+
+    # Col hints are correct
+    @xsize.times do |x|
+      @solver.assert col_tent_count(x) == @col_hints[x]
+    end
+
+    # No two tents are next to each other
+    each_coord do |x,y|
+      neighbourhood(x,y).each do |nv|
+        @solver.assert @tent_vars[{x,y}].implies(~nv)
+      end
+    end
+
+    # Every tree has corresponding tent
+    each_coord do |x,y|
+      v = @tree_vars[{x,y}]
+      @solver.assert (v == 1).implies(@tent_vars[{x,y-1}]? || false) # N
+      @solver.assert (v == 2).implies(@tent_vars[{x+1,y}]? || false) # E
+      @solver.assert (v == 3).implies(@tent_vars[{x,y+1}]? || false) # S
+      @solver.assert (v == 4).implies(@tent_vars[{x-1,y}]? || false) # W
+    end
+
+    # Now print the solution
+    if @solver.check
+      model = @solver.model
+      @ysize.times do |y|
+        @xsize.times do |x|
+          v = (model[@tent_vars[{x, y}]].to_s == "true")
+          if @trees[y][x]
+            print "T"
+          elsif v
+            print "*"
+          else
+            print "."
+          end
+        end
+        print "\n"
+      end
+    else
+      puts "No solution"
+    end
+  end
+end
+
+TentsSolver.new(ARGV[0]).call
