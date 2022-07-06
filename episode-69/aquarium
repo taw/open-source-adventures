@@ -1,0 +1,92 @@
+#!/usr/bin/env crystal
+
+require "z3"
+
+class AquariumSolver
+  @col_hints : Array(Int32)
+  @row_hints : Array(Int32)
+  @board : Array(Array(Char))
+  @containers : Set(Char)
+
+  def initialize(path)
+    lines = File.read_lines(path)
+    @col_hints = lines[0][2..].chars.map(&.to_i)
+    @xsize = @col_hints.size
+    @row_hints = lines[2..].map(&.[0].to_i)
+    @ysize = @row_hints.size
+    @board = lines[2..].map{|l| l[2..].chars}
+    @containers = @board.flatten.to_set
+    @solver = Z3::Solver.new
+    @cells = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @water_levels = {} of Char => Z3::IntExpr
+  end
+
+  def each_coord
+    @xsize.times do |x|
+      @ysize.times do |y|
+        yield(x, y)
+      end
+    end
+  end
+
+  def row_cell_count(y)
+    (0...@xsize).map{|x| @cells[{x,y}].ite(1, 0)}.reduce{|a,b| a+b}
+  end
+
+  def col_cell_count(x)
+    (0...@ysize).map{|y| @cells[{x,y}].ite(1, 0)}.reduce{|a,b| a+b}
+  end
+
+  def call
+    # Initialize cell variables
+    each_coord do |x, y|
+      @cells[{x,y}] = Z3.bool("cell #{x},#{y}")
+    end
+
+    # Initialize water level variables
+    # We could restrict it more tightly to make solution unambiguous
+    # Right now container at levels 4-6 can have any level 0-10
+    # even though 0-4 means same (all full), and 6-10 means same (all empty)
+    @containers.each do |c|
+      @water_levels[c] = v = Z3.int("level #{c}")
+      @solver.assert v >= 0
+      @solver.assert v <= @ysize
+    end
+
+    # All cells in each container have correct water level
+    each_coord do |x, y|
+      c = @board[y][x]
+      @solver.assert @cells[{x,y}] == (y >= @water_levels[c])
+    end
+
+    # Row hints are correct
+    @ysize.times do |y|
+      @solver.assert row_cell_count(y) == @row_hints[y]
+    end
+
+    # Col hints are correct
+    @xsize.times do |x|
+      @solver.assert col_cell_count(x) == @col_hints[x]
+    end
+
+    # Print the solution
+    if @solver.satisfiable?
+      model = @solver.model
+      @ysize.times do |y|
+        @xsize.times do |x|
+          v = (model[@cells[{x, y}]].to_s == "true")
+          if v
+            print "#"
+          else
+            print "."
+          end
+        end
+        print "\n"
+      end
+    else
+      puts "No solution"
+    end
+  end
+end
+
+AquariumSolver.new(ARGV[0]).call
