@@ -1,0 +1,9 @@
+#!/usr/bin/env crystal
+
+hints, board = ARGV[0].split(";", 2)
+hints = hints.split("_")
+size = hints.size // 2
+top = hints[0, size]
+left = hints[size, size]
+board = board.split(",").map{|c| (96+c.to_i).chr}.join.scan(/.{#{size}}/).map(&.[0])
+puts ["  #{top.join}\n\n", left.zip(board).map{|a,b| "#{a} #{b}\n"}.join].join
