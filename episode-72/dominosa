@@ -1,0 +1,94 @@
+#!/usr/bin/env crystal
+
+require "z3"
+
+class DominosaSolver
+  @board : Array(Array(Int32))
+  @xsize : Int32
+
+  def initialize(path)
+    @board = File.read_lines(path).map(&.chars.map(&.to_i))
+    @ysize = @board.size
+    @xsize = @board[0].size
+    @solver = Z3::Solver.new
+    @horizontal = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @vertical = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @dominos = {} of Tuple(Int32, Int32) => Array(Z3::BoolExpr)
+  end
+
+  def each_coord
+    @xsize.times do |x|
+      @ysize.times do |y|
+        yield(x,y)
+      end
+    end
+  end
+
+  def connections(x,y)
+    [
+      @horizontal[{x,y}]?,
+      @horizontal[{x-1,y}]?,
+      @vertical[{x,y}]?,
+      @vertical[{x,y-1}]?,
+    ].compact
+  end
+
+  def add_domino(x1, y1, x2, y2, var)
+    v1 = @board[y1][x1]
+    v2 = @board[y2][x2]
+    v1, v2 = [v1, v2].sort
+    @dominos[{v1,v2}] ||= [] of Z3::BoolExpr
+    @dominos[{v1,v2}].push var
+  end
+
+  def call
+    # Setup horizontal variables
+    each_coord do |x,y|
+      next if x == @xsize - 1
+      @horizontal[{x,y}] = var = Z3.bool("h #{x},#{y}")
+      add_domino x, y, x+1, y, var
+    end
+
+    # Setup vertical variables
+    each_coord do |x,y|
+      next if y == @ysize - 1
+      @vertical[{x,y}] = var = Z3.bool("v #{x},#{y}")
+      add_domino x, y, x, y+1, var
+    end
+
+    # Each number belongs to exactly one domino
+    each_coord do |x,y|
+      @solver.assert 1 == Z3.add(connections(x,y).map{|v| v.ite(1,0)})
+    end
+
+    # Every type of domino has exactly one instance
+    @dominos.each do |type, vars|
+      @solver.assert 1 == Z3.add(vars.map{|v| v.ite(1,0)})
+    end
+
+    if @solver.satisfiable?
+      model = @solver.model
+      @ysize.times do |y|
+        @xsize.times do |x|
+          print @board[y][x]
+          next if x == @xsize - 1
+          print model[@horizontal[{x,y}]].to_b ? "*" : " "
+        end
+        print "\n"
+
+        next if y == @ysize - 1
+
+        @xsize.times do |x|
+          print model[@vertical[{x,y}]].to_b ? "*" : " "
+          next if x == @xsize - 1
+          print " "
+        end
+        print "\n"
+      end
+    else
+      puts "No solution"
+    end
+  end
+end
+
+DominosaSolver.new(ARGV[0]).call
