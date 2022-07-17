@@ -1,0 +1,8 @@
+#!/usr/bin/env crystal
+
+puzzle = ARGV[0].gsub(/[a-z]/){|c| "." * (c[0].ord - 96)}.gsub("B", "#")
+size = (puzzle.size ** 0.5).to_i
+
+puzzle.chars.each_slice(25) do |slice|
+  puts slice.join
+end

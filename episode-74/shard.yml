@@ -1,0 +1,6 @@
+name: light-up-solver
+version: 0.0.1
+
+dependencies:
+  z3:
+    github: taw/crystal-z3

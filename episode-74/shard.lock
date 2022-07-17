@@ -1,0 +1,6 @@
+version: 2.0
+shards:
+  z3:
+    git: https://github.com/taw/crystal-z3.git
+    version: 0.2.0+git.commit.8d7da29692b8e04a852c15be2eda5b49a31d1036
+

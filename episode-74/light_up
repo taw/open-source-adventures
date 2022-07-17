@@ -1,0 +1,134 @@
+#!/usr/bin/env crystal
+
+require "z3"
+
+class LightUp
+  @xsize : Int32
+
+  def initialize(path)
+    @board = File.read_lines(path)
+    @ysize = @board.size
+    @xsize = @board[0].size
+    @solver = Z3::Solver.new
+    @cells = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @horizontal = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @vertical = {} of Tuple(Int32, Int32) => Z3::BoolExpr
+    @members = {} of Z3::BoolExpr => Array(Z3::BoolExpr)
+    @members.compare_by_identity
+  end
+
+  def each_coord
+    @ysize.times do |y|
+      @xsize.times do |x|
+        yield(x, y)
+      end
+    end
+  end
+
+  def neighbours_count(x, y)
+    Z3.add(
+      [
+        @cells[{x+1,y}]?,
+        @cells[{x-1,y}]?,
+        @cells[{x,y+1}]?,
+        @cells[{x,y-1}]?,
+      ].compact.map{|v| v.ite(1,0)}
+    )
+  end
+
+  def empty?(x, y)
+    @board[y][x] == '.'
+  end
+
+  # Everything outside the board is a wall
+  def empty_left?(x, y)
+    x != 0 && empty?(x-1, y)
+  end
+
+  def empty_top?(x, y)
+    y != 0 && empty?(x, y-1)
+  end
+
+  def call
+    # Setup cell variables
+    each_coord do |x,y|
+      @cells[{x,y}] = v = Z3.bool("cell #{x},#{y}")
+    end
+
+    # Setup walls and hints
+    each_coord do |x,y|
+      c = @board[y][x]
+      v = @cells[{x,y}]
+      if c != '.'
+        @solver.assert ~v
+      end
+      if c.ascii_number?
+        @solver.assert neighbours_count(x, y) == c.to_i
+      end
+    end
+
+    # Setup horizontal group variables
+    each_coord do |x, y|
+      next unless empty?(x, y)
+      if empty_left?(x, y)
+        # continue existing group
+        @horizontal[{x,y}] = @horizontal[{x-1,y}]
+      else
+        # start a new group
+        @horizontal[{x,y}] = Z3.bool("h #{x},#{y}")
+        @members[@horizontal[{x,y}]] = [] of Z3::BoolExpr
+      end
+      @members[@horizontal[{x,y}]] << @cells[{x,y}]
+    end
+
+    # Setup vertical group variables
+    each_coord do |x, y|
+      next unless empty?(x, y)
+      if empty_top?(x, y)
+        # continue existing group
+        @vertical[{x,y}] = @vertical[{x,y-1}]
+      else
+        # start a new group
+        @vertical[{x,y}] = Z3.bool("v #{x},#{y}")
+        @members[@vertical[{x,y}]] = [] of Z3::BoolExpr
+      end
+      @members[@vertical[{x,y}]] << @cells[{x,y}]
+    end
+
+    # Every cell sees a light - either in its horizontal or vertical group (or both)
+    each_coord do |x, y|
+      next unless empty?(x, y)
+      @solver.assert(@horizontal[{x,y}] | @vertical[{x,y}])
+    end
+
+    # Group has a light if any of its members has a light
+    @members.each do |var, members|
+      @solver.assert var == Z3.or(members)
+    end
+
+    # No two lights see each other = no group has more than one light
+    @members.each do |var, members|
+      @solver.assert Z3.add(members.map{|v| v.ite(1,0)}) <= 1
+    end
+
+    if @solver.satisfiable?
+      model = @solver.model
+      @ysize.times do |y|
+        @xsize.times do |x|
+          c = @board[y][x]
+          if c == '.'
+            v = model[@cells[{x,y}]].to_b
+            print v ? "*" : "."
+          else
+            print c
+          end
+        end
+        print "\n"
+      end
+    else
+      puts "No solution"
+    end
+  end
+end
+
+LightUp.new(ARGV[0]).call
