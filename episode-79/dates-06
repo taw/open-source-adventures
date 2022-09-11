@@ -1,0 +1,19 @@
+#!/usr/bin/env crystal
+
+def parse_date(s)
+  case s
+  when
+    %r[(?<year>\d\d\d\d)-(?<month>\d\d)-(?<day>\d\d)],
+    %r[(?<year>\d\d\d\d)/(?<month>\d\d)/(?<day>\d\d)],
+    %r[(?<day>\d\d)/(?<month>\d\d)/(?<year>\d\d\d\d)]
+    [$~["year"].to_i, $~["month"].to_i, $~["day"].to_i]
+  end
+end
+
+%w[
+  2015-05-25
+  2016/06/26
+  27/07/2017
+].each do |s|
+  p parse_date(s)
+end
