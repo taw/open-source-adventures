@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import re
+
+def parse_date(s):
+  if m := (
+      re.search(r'(?P<year>\d\d\d\d)-(?P<month>\d\d)-(?P<day>\d\d)', s) or
+      re.search(r'(?P<year>\d\d\d\d)/(?P<month>\d\d)/(?P<day>\d\d)', s) or
+      re.search(r'(?P<day>\d\d)/(?P<month>\d\d)/(?P<year>\d\d\d\d)', s)
+    ):
+    return [int(m["year"]), int(m["month"]), int(m["day"])]
+
+for date in ["2015-05-25", "2016/06/26", "27/07/2017"]:
+  print(parse_date(date))
