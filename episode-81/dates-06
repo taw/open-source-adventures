@@ -1,0 +1,17 @@
+#!/usr/bin/env raku
+
+use JSON::Fast;
+
+sub parse_date($_) {
+  if /
+    $<y>=(\d\d\d\d) \- $<m>=(\d\d) \- $<d>=(\d\d) |
+    $<y>=(\d\d\d\d) \/ $<m>=(\d\d) \/ $<d>=(\d\d) |
+    $<d>=(\d\d) \/ $<m>=(\d\d) \/ $<y>=(\d\d\d\d)
+    / {
+    [+$<y>, +$<m>, +$<d>]
+  }
+}
+
+for qw[2015-05-25 2016/06/26 27/07/2017] {
+  say to-json(parse_date($_), :!pretty)
+}
