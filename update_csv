@@ -1,18 +1,27 @@
 #!/usr/bin/env ruby
 
 require "pathname"
+require "zip"
 
 class UpdateCSV
   def initialize(archive_path)
     @archive_path = Pathname(archive_path)
   end
 
+  def read_file(path)
+    if @archive_path.directory?
+      (@archive_path + path).read
+    else
+      Zip::File.open(@archive_path).read(path)
+    end
+  end
+
   def updated_equipment
-    @updated_equipment ||= (@archive_path + "russia_losses_equipment.csv").read
+    @updated_equipment ||= read_file("russia_losses_equipment.csv")
   end
 
   def updated_personnel
-    @updated_personnel ||= (@archive_path + "russia_losses_personnel.csv").read
+    @updated_personnel ||= read_file("russia_losses_personnel.csv")
   end
 
   def csv_files
