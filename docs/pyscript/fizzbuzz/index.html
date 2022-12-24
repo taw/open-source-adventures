@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FizzBuzz</title>
+  <link rel="stylesheet" href="./pyscript.css" />
+  <script defer src="./pyscript.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <py-script>
+    for i in range(1, 101):
+      if i % 15 == 0:
+        print("FizzBuzz")
+      elif i % 3 == 0:
+        print("Fizz")
+      elif i % 5 == 0:
+        print("Buzz")
+      else:
+        print(i)
+  </py-script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DOM</title>
+  <link rel="stylesheet" href="./pyscript.css" />
+  <script defer src="./pyscript.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+    div {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="output"></div>
+  <py-script>
+    from pyscript import Element
+    def fizzbuzz(i):
+      if i % 15 == 0:
+        return "FizzBuzz"
+      elif i % 3 == 0:
+        return "Fizz"
+      elif i % 5 == 0:
+        return "Buzz"
+      else:
+        return str(i)
+    list = Element("output")
+    list.write("\n".join([fizzbuzz(i) for i in range(1, 101)]) )
+  </py-script>
+</body>
+</html>
