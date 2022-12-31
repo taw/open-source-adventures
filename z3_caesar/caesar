@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+
+require "z3"
+
+class CaesarSolver
+  def initialize(text)
+    @key = Z3.Int("key")
+    @ct = text.bytes.map{|c| to_number(c)}
+  end
+
+  def to_letter(i)
+    (i + 'a'.ord).chr
+  end
+
+  def to_number(c)
+    c.ord - 'a'.ord
+  end
+
+  def call
+    @solver = Z3::Optimize.new
+    # Variables for each plaintext letter
+    @pt = (0...@ct.size).map{|i| Z3.Int("pt#{i}")}
+
+    # Possible keys
+    @solver.assert @key >= 0
+    @solver.assert @key <= 25
+
+    # This is how Caesar cipher works
+    @pt.zip(@ct).each do |p,c|
+      # modulo is a bit awkward
+      @solver.assert p >= 0
+      @solver.assert p <= 25
+      @solver.assert Z3.Or(p == @key + c, p == @key + c - 26)
+    end
+
+    # Tell Z3 that there's probably a lot of common letters like E
+    @pt.each do |p|
+      @solver.assert_soft p == to_number('e')
+    end
+
+    if @solver.satisfiable?
+      model = @solver.model
+      puts @pt.map{|p| to_letter(model[p].to_i)}.join
+    else
+      puts "No solution found"
+    end
+  end
+end
+
+text = open(ARGV[0] || "encrypted.txt").read.chomp
+CaesarSolver.new(text).call

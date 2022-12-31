@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+key = rand(0..25)
+text = STDIN.read.downcase.gsub(/[^a-z]/, "")
+
+puts text.bytes.map{|c| (((c-'a'.ord)+key) % 26 + 'a'.ord).chr}.join
