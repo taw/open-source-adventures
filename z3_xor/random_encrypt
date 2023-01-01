@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+key_len = 4
+key = key_len.times.map{ rand(256) }
+text = STDIN.read.bytes
+encrypted = (0...text.size).map{|i| text[i] ^ key[i % key_len]}.pack("C*")
+print encrypted

@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+
+require "z3"
+
+class XorSolver
+  def initialize(text)
+    @key_len = 4
+    @key = (0...@key_len).map{|i| Z3.Bitvec("k#{i}", 8) }
+    @ct = text.bytes
+  end
+
+  def call
+    @solver = Z3::Optimize.new
+    # Variables for each plaintext letter
+    @pt = (0...@ct.size).map{|i| Z3.Bitvec("pt#{i}", 8) }
+
+    # This is how XOR cipher works
+    (0...@pt.size).each do |i|
+      @solver.assert @pt[i] == @ct[i] ^ @key[i % @key_len]
+    end
+
+    # All characters are newline (0x0A) or printable character (0x20-0x7E)
+    @pt.each do |pti|
+      @solver.assert Z3.Or(pti == 0x0A, pti.unsigned_ge(0x20))
+      @solver.assert pti.unsigned_le(0x7E)
+    end
+
+    # Get as many space, and lowercase "e" as possible
+    @pt.each do |pti|
+      @solver.assert_soft pti == 0x20
+      @solver.assert_soft pti == 'e'.ord
+    end
+
+    if @solver.satisfiable?
+      model = @solver.model
+      puts @pt.map{|pti| model[pti].to_s.to_i.chr}.join
+    else
+      puts "No solution found"
+    end
+  end
+end
+
+text = open(ARGV[0] || "encrypted.txt").read.b
+XorSolver.new(text).call
