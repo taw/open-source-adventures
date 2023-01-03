@@ -31,7 +31,7 @@ $: futureWiaRate = (currentWiaRate * $futureIntensity / 100.0)
 $: futureTotalRate = futureKiaRate + futureWiaRate
 
 // Just hardcode as there's no obvious "finish date"
-$: lastDate = new Date("2023-01-01")
+$: lastDate = new Date("2024-01-01")
 
 // How many KIA+WIA by lastDate
 $: unitsMax = Math.round((lastDate - maxDate) * futureTotalRate) + totalSoFar
