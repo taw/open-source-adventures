@@ -23,7 +23,7 @@ svg {
   display: block;
 }
 .graph {
-  transform: translate(50px, 20px);
+  transform: translate(60px, 20px);
 }
 path {
   fill: none;
@@ -42,9 +42,9 @@ path.trendline {
   stroke-dasharray: 3px;
 }
 .x-axis {
-  transform: translate(50px, 520px);
+  transform: translate(60px, 520px);
 }
 .y-axis {
-  transform: translate(50px, 20px);
+  transform: translate(60px, 20px);
 }
 </style>
